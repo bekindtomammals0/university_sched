@@ -179,7 +179,8 @@ class Block(Base):
     """
     __tablename__ = "block"
 
-    block_id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    block_id: Mapped[int] = mapped_column(Integer, nullable=False)
     offering_id: Mapped[int] = mapped_column(ForeignKey("offering.offering_id"), nullable=False)
     major_id: Mapped[int] = mapped_column(ForeignKey("major.major_id"), nullable=False)
     year_level: Mapped[int] = mapped_column(Integer, nullable=False)
