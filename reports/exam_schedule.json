@@ -1,0 +1,20 @@
+[
+  {
+    "Offering No.": 1,
+    "Course No.": 101,
+    "Course Description": "Programming 1",
+    "Date of Exam": "2026-03-23",
+    "Time of Exam": "07:00-09:00",
+    "Faculty of Offering": "Alice",
+    "Room of Exam": 101
+  },
+  {
+    "Offering No.": 2,
+    "Course No.": 201,
+    "Course Description": "Genetics",
+    "Date of Exam": "2026-03-23",
+    "Time of Exam": "07:00-09:00",
+    "Faculty of Offering": "Bob",
+    "Room of Exam": 201
+  }
+]
