@@ -1,0 +1,32 @@
+[
+  {
+    "offering_id": 1,
+    "old_slot": {
+      "date": "2026-03-23",
+      "start": "08:00:00",
+      "room": null
+    },
+    "new_slot": {
+      "date": "2026-03-23",
+      "start": "08:00:00",
+      "room": 101
+    },
+    "reason": "Initial greedy placement",
+    "cost_delta": 0.0
+  },
+  {
+    "offering_id": 2,
+    "old_slot": {
+      "date": "2026-03-23",
+      "start": "08:00:00",
+      "room": null
+    },
+    "new_slot": {
+      "date": "2026-03-23",
+      "start": "08:00:00",
+      "room": 201
+    },
+    "reason": "Initial greedy placement",
+    "cost_delta": 0.0
+  }
+]
