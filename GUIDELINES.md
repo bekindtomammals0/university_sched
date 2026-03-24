@@ -4,6 +4,7 @@ Author: Principal Software Architect — Exam Scheduling Project
 Purpose
 
     Provide concrete, actionable development rules, coding standards, and project-level policies to standardize contributions and to guide automated agents (including AI-assisted tooling) producing code, documentation, tests, or scheduler outputs.
+    All development must also adhere to the standards defined in SECURITY_GUIDELINES.md.
 
 Audience
 
@@ -166,6 +167,7 @@ SQL
             When producing SQL, use parameterized placeholders and provide a corresponding test dataset or a dry-run SELECT.
 
         Security & Supply Chain
+            Strictly follow the SECURITY_GUIDELINES.md for all database, credential, and PII handling.
             Vet third-party models or code-generation tools per organization policy.
             Do not embed secrets or credentials in code or docs.
             Use signed commits for release tags where possible.

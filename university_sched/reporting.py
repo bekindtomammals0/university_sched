@@ -11,12 +11,23 @@ class ReportGenerator:
     """
     Generates CSV and JSON reports based on the scheduled offerings.
     Adheres to the column and sorting requirements in README.md.
+    Implements PII masking according to SECURITY_GUIDELINES.md.
     """
 
-    def __init__(self, session: Session, out_dir: str = "./reports"):
+    def __init__(self, session: Session, out_dir: str = "./reports", mask_pii: bool = False):
         self.session = session
         self.out_dir = out_dir
+        self.mask_pii = mask_pii
         os.makedirs(self.out_dir, exist_ok=True)
+
+    def _mask_pii(self, value: str) -> str:
+        """Simple masking for sensitive strings."""
+        if not self.mask_pii or not value:
+            return value
+        # Simple mask: keep first and last char, mask middle
+        if len(value) <= 2:
+            return "***"
+        return f"{value[0]}***{value[-1]}"
 
     def _write_csv(self, filename: str, fieldnames: List[str], data: List[Dict]):
         path = os.path.join(self.out_dir, filename)
@@ -52,7 +63,7 @@ class ReportGenerator:
                 "Course Description": o.course.crs_desc,
                 "Date of Exam": o.exam_date.strftime("%Y-%m-%d"),
                 "Time of Exam": f"{o.start_time.strftime('%H:%M')}-{o.end_time.strftime('%H:%M')}",
-                "Faculty of Offering": o.faculty.faculty_name,
+                "Faculty of Offering": self._mask_pii(o.faculty.faculty_name),
                 "Room of Exam": o.room_id
             })
 
@@ -103,7 +114,7 @@ class ReportGenerator:
         report_data = []
         for o in offerings:
             report_data.append({
-                "Faculty Name": o.faculty.faculty_name,
+                "Faculty Name": self._mask_pii(o.faculty.faculty_name),
                 "Date": o.exam_date.strftime("%Y-%m-%d"),
                 "Time": f"{o.start_time.strftime('%H:%M')}-{o.end_time.strftime('%H:%M')}",
                 "Room": o.room_id,

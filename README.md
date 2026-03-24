@@ -55,7 +55,7 @@ High-level flow:
 
 Constraint Satisfaction (Hard Rules)
 
-All listed constraints are enforced as non-negotiable:
+All listed constraints are enforced as non-negotiable and follow the SECURITY_GUIDELINES.md for safe data handling:
 
     5-Day Limit
         Scheduling domain is five consecutive exam days (Day 1..Day 5). The solver will only assign exam_date within this set.
@@ -243,11 +243,12 @@ Setup & Installation (Placeholder)
 Usage (Placeholder)
 
     Run full scheduling pipeline:
-        python -m scheduler.run --config config.yml --outdir ./reports --format csv
+        python -m scheduler.run --config config.yml --outdir ./reports --format csv --mask-pii
     Example flags:
         --dry-run (validate constraints and report infeasibilities)
         --dept-id (limit scheduling to a department)
         --force-resolve (attempt aggressive swaps to resolve remaining student load penalties)
+        --mask-pii (anonymize faculty and student-identifiable data in reports)
     Generate reports from existing schedule:
         python -m scheduler.export_reports --format csv --outdir ./reports
 

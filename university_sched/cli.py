@@ -14,32 +14,40 @@ def run_pipeline(args):
     # 1. Load Settings
     settings = Settings.load(args.config)
     
+    # Override settings with CLI flags if provided
+    if args.mask_pii:
+        settings.mask_pii = True
+
     # 2. Setup Database
-    engine = create_engine(settings.database_url)
+    # Use connect_args for specific DB drivers if needed (e.g., check_same_thread for sqlite)
+    connect_args = {}
+    if settings.database_url.startswith("sqlite"):
+        connect_args["check_same_thread"] = False
+    
+    # In a production scenario, we would enforce TLS here via connect_args or engine options
+    engine = create_engine(settings.database_url, connect_args=connect_args)
     Base.metadata.create_all(engine)
     Session = sessionmaker(bind=engine)
     session = Session()
 
     try:
-        # 3. Initialize Optimizer
+        # ... (optimizer initialization remains the same)
         optimizer = Optimizer(session, settings)
         
-        # 4. Initial Assignment
+        # ... (greedy assignment and optimization remains the same)
         print("Starting Initial Assignment...")
         optimizer.run_initial_greedy_assignment()
         
-        # 5. Optimization
         if not args.dry_run:
             print(f"Starting Optimization (iterations={args.iterations})...")
             optimizer.optimize_with_hill_climbing(iterations=args.iterations)
         
-        # 6. Validation
         print("Validating constraints...")
         ConstraintEngine.validate_all(session, set(settings.exam_days))
         
         # 7. Generate Reports
-        print(f"Generating reports in {args.outdir}...")
-        reporter = ReportGenerator(session, out_dir=args.outdir)
+        print(f"Generating reports in {args.outdir} (PII Masking: {settings.mask_pii})...")
+        reporter = ReportGenerator(session, out_dir=args.outdir, mask_pii=settings.mask_pii)
         formats = []
         if args.csv: formats.append("csv")
         if args.json: formats.append("json")
@@ -63,6 +71,7 @@ def main():
     parser.add_argument("--dry-run", action="store_true", help="Perform initial placement only")
     parser.add_argument("--csv", action="store_true", help="Generate CSV reports")
     parser.add_argument("--json", action="store_true", help="Generate JSON reports")
+    parser.add_argument("--mask-pii", action="store_true", help="Enable PII masking in reports")
     
     args = parser.parse_args()
     
