@@ -75,6 +75,47 @@ class DataIngestor:
             self.session.add(room)
         self.session.flush()
 
+    def load_room_adjacencies(self, df: pd.DataFrame) -> None:
+        """Loads room adjacency mappings."""
+        from university_sched.models.schema import RoomAdjacency
+        valid_room_ids = {r.room_id for r in self.session.query(Room).all()}
+        for _, row in df.iterrows():
+            if row["room_id"] in valid_room_ids and row["adjacent_room_id"] in valid_room_ids:
+                adj = RoomAdjacency(
+                    room_id=row["room_id"],
+                    adjacent_room_id=row["adjacent_room_id"]
+                )
+                self.session.add(adj)
+        self.session.flush()
+
+    def load_degree_programs(self, df: pd.DataFrame) -> None:
+        """Loads degree programs."""
+        valid_dept_ids = {d.dept_id for d in self.session.query(Department).all()}
+        for _, row in df.iterrows():
+            if row["dept_id"] not in valid_dept_ids:
+                continue
+            dp = DegreeProgram(
+                degprog_id=row["degprog_id"],
+                dept_id=row["dept_id"],
+                degprog_name=row["degprog_name"]
+            )
+            self.session.add(dp)
+        self.session.flush()
+
+    def load_majors(self, df: pd.DataFrame) -> None:
+        """Loads majors."""
+        valid_dp_ids = {dp.degprog_id for dp in self.session.query(DegreeProgram).all()}
+        for _, row in df.iterrows():
+            if row["degprog_id"] not in valid_dp_ids:
+                continue
+            major = Major(
+                major_id=row["major_id"],
+                degprog_id=row["degprog_id"],
+                major_name=row["major_name"]
+            )
+            self.session.add(major)
+        self.session.flush()
+
     def load_offerings(self, df: pd.DataFrame) -> None:
         """Loads offerings, identifying fixed bookings (e.g., NSTP)."""
         valid_course_ids = {c.course_id for c in self.session.query(Course).all()}
