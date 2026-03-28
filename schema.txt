@@ -1,0 +1,79 @@
+-- 1. Departments Table
+-- Captures the Acronym (PK) and full name.
+CREATE TABLE departments (
+    dept_id VARCHAR(10) PRIMARY KEY, -- e.g., 'DABE', 'DOE'
+    dept_name VARCHAR(100) NOT NULL
+);
+
+-- 2. Degree Programs Table
+-- Linked to Departments as per "Owner of degree programs" rule.
+CREATE TABLE degree_programs (
+    degprog_id VARCHAR(20) PRIMARY KEY, -- e.g., 'BSABE', 'BSA'
+    dept_id VARCHAR(10),
+    degprog_name VARCHAR(150),
+    FOREIGN KEY (dept_id) REFERENCES departments(dept_id)
+);
+
+-- 3. Faculty Table
+-- Stores faculty names and their home departments.
+CREATE TABLE faculty (
+    faculty_id SERIAL PRIMARY KEY,
+    faculty_name VARCHAR(150) NOT NULL,
+    dept_id VARCHAR(10),
+    FOREIGN KEY (dept_id) REFERENCES departments(dept_id)
+);
+
+-- 4. Courses Table
+-- Course-level attributes like is_major and is_grad.
+CREATE TABLE courses (
+    course_code VARCHAR(20) PRIMARY KEY, -- e.g., 'ABEn 132'
+    course_description TEXT NOT NULL,
+    dept_id VARCHAR(10),
+    is_major BOOLEAN DEFAULT FALSE,
+    is_grad BOOLEAN DEFAULT FALSE,
+    FOREIGN KEY (dept_id) REFERENCES departments(dept_id)
+);
+
+-- 5. Offerings Table
+-- The central entity for the scheduler. Links a course to a specific faculty instance.
+CREATE TABLE offerings (
+    offering_no VARCHAR(20) PRIMARY KEY, -- e.g., 'A117'
+    course_code VARCHAR(20) NOT NULL,
+    faculty_id INT,
+    FOREIGN KEY (course_code) REFERENCES courses(course_code),
+    FOREIGN KEY (faculty_id) REFERENCES faculty(faculty_id)
+);
+
+-- 6. Offering_Blocks (Association Table)
+-- Handles the relationship between an Offering, Block Number, and Degree Program.
+-- This accommodates entries where BlockNo or DgrProg might be '#N/A' or shared.
+CREATE TABLE offering_blocks (
+    offering_no VARCHAR(20),
+    block_no VARCHAR(10), -- e.g., '38', '40', or 'N/A'
+    degprog_id VARCHAR(20),
+    year_level INT, -- e.g., 1, 2, 3, 4
+    PRIMARY KEY (offering_no, block_no, degprog_id),
+    FOREIGN KEY (offering_no) REFERENCES offerings(offering_no),
+    FOREIGN KEY (degprog_id) REFERENCES degree_programs(degprog_id)
+);
+
+-- 7. Rooms Table (Required for Scheduling)
+-- Included based on README requirements for capacity and dept restrictions.
+CREATE TABLE rooms (
+    room_id VARCHAR(50) PRIMARY KEY,
+    dept_id VARCHAR(10),
+    room_capacity INT NOT NULL,
+    FOREIGN KEY (dept_id) REFERENCES departments(dept_id)
+);
+
+-- 8. Final Exam Schedule Table
+-- The output table for the optimization pipeline.
+CREATE TABLE exam_schedules (
+    offering_no VARCHAR(20) PRIMARY KEY,
+    room_id VARCHAR(50),
+    exam_date DATE,
+    time_slot_start TIME,
+    time_slot_end TIME,
+    FOREIGN KEY (offering_no) REFERENCES offerings(offering_no),
+    FOREIGN KEY (room_id) REFERENCES rooms(room_id)
+);
