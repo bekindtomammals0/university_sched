@@ -34,30 +34,7 @@ CREATE TABLE courses (
     FOREIGN KEY (dept_id) REFERENCES departments(dept_id)
 );
 
--- 5. Offerings Table
--- The central entity for the scheduler. Links a course to a specific faculty instance.
-CREATE TABLE offerings (
-    offering_no VARCHAR(20) PRIMARY KEY, -- e.g., 'A117'
-    course_code VARCHAR(20) NOT NULL,
-    faculty_id INT,
-    FOREIGN KEY (course_code) REFERENCES courses(course_code),
-    FOREIGN KEY (faculty_id) REFERENCES faculty(faculty_id)
-);
-
--- 6. Offering_Blocks (Association Table)
--- Handles the relationship between an Offering, Block Number, and Degree Program.
--- This accommodates entries where BlockNo or DgrProg might be '#N/A' or shared.
-CREATE TABLE offering_blocks (
-    offering_no VARCHAR(20),
-    block_no VARCHAR(10), -- e.g., '38', '40', or 'N/A'
-    degprog_id VARCHAR(20),
-    year_level INT, -- e.g., 1, 2, 3, 4
-    PRIMARY KEY (offering_no, block_no, degprog_id),
-    FOREIGN KEY (offering_no) REFERENCES offerings(offering_no),
-    FOREIGN KEY (degprog_id) REFERENCES degree_programs(degprog_id)
-);
-
--- 7. Rooms Table (Required for Scheduling)
+-- 5. Rooms Table (Required for Scheduling)
 -- Included based on README requirements for capacity and dept restrictions.
 CREATE TABLE rooms (
     room_id VARCHAR(50) PRIMARY KEY,
@@ -66,14 +43,41 @@ CREATE TABLE rooms (
     FOREIGN KEY (dept_id) REFERENCES departments(dept_id)
 );
 
--- 8. Final Exam Schedule Table
--- The output table for the optimization pipeline.
-CREATE TABLE exam_schedules (
-    offering_no VARCHAR(20) PRIMARY KEY,
+-- 6. Room Adjacency Table
+-- Mapping for adjacent rooms to avoid noise/interference during exams.
+CREATE TABLE room_adjacency (
+    room_id VARCHAR(50),
+    adjacent_room_id VARCHAR(50),
+    PRIMARY KEY (room_id, adjacent_room_id),
+    FOREIGN KEY (room_id) REFERENCES rooms(room_id),
+    FOREIGN KEY (adjacent_room_id) REFERENCES rooms(room_id)
+);
+
+-- 7. Offerings Table
+-- The central entity for the scheduler. Links a course to a specific faculty instance.
+-- Scheduling fields are merged here for efficiency in the active implementations.
+CREATE TABLE offerings (
+    offering_no VARCHAR(20) PRIMARY KEY, -- e.g., 'A117'
+    course_code VARCHAR(20) NOT NULL,
+    faculty_id INT,
+    num_enrolled INT NOT NULL,
     room_id VARCHAR(50),
     exam_date DATE,
     time_slot_start TIME,
     time_slot_end TIME,
-    FOREIGN KEY (offering_no) REFERENCES offerings(offering_no),
+    FOREIGN KEY (course_code) REFERENCES courses(course_code),
+    FOREIGN KEY (faculty_id) REFERENCES faculty(faculty_id),
     FOREIGN KEY (room_id) REFERENCES rooms(room_id)
+);
+
+-- 8. Offering_Blocks (Association Table)
+-- Handles the relationship between an Offering, Block Number, and Degree Program.
+CREATE TABLE offering_blocks (
+    offering_no VARCHAR(20),
+    block_no VARCHAR(10), -- e.g., '38', '40', or 'N/A'
+    degprog_id VARCHAR(20),
+    year_level INT, -- e.g., 1, 2, 3, 4
+    PRIMARY KEY (offering_no, block_no, degprog_id),
+    FOREIGN KEY (offering_no) REFERENCES offerings(offering_no),
+    FOREIGN KEY (degprog_id) REFERENCES degree_programs(degprog_id)
 );

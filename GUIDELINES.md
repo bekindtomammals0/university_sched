@@ -22,10 +22,11 @@ These guidelines provide standards for both the **Python Engine** and the **VILT
 
 ### PHP / Laravel (Web)
 - **Style**: PSR-12. Use `Laravel Pint`.
-- **Typing**: Use PHP 8.2+ property and return types.
+- **Typing**: Use PHP 8.3+ property and return types.
 - **Validation**: Use Laravel `FormRequest` for input sanitization.
 - **Logic**: Core scheduling logic must reside in `App\Services\SchedulingService`.
 - **SQL**: Eloquent ORM or Query Builder with parameterized queries.
+- **Commands**: Use `composer run dev` for local development.
 
 ### Frontend (Vue.js + Tailwind)
 - **Composition API**: Use Vue 3 `<script setup>`.
