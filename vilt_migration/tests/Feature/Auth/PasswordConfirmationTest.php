@@ -30,3 +30,15 @@ test('password is not confirmed with invalid password', function () {
 
     $response->assertSessionHasErrors();
 });
+
+test('password confirmation mismatch fails', function () {
+    $user = User::factory()->create();
+
+    $response = $this->actingAs($user)->post('/confirm-password', [
+        'password' => 'password',
+        'password_confirmation' => 'different-password',
+    ]);
+
+    $response->assertSessionHasErrors(['password']);
+    $response->assertStatus(422);
+});

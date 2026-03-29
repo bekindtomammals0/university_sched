@@ -1,85 +1,119 @@
 <?php
 
+use Tests\TestCase;
 use App\Models\User;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Str;
 
-test('profile page is displayed', function () {
-    $user = User::factory()->create();
+class ProfileTest extends TestCase
+{
+    public function test_profile_page_is_displayed()
+    {
+        $user = User::factory()->create();
 
-    $response = $this
-        ->actingAs($user)
-        ->get('/profile');
+        $response = $this
+            ->actingAs($user)
+            ->get('/profile');
 
-    $response->assertOk();
-});
+        $response->assertOk();
+    }
 
-test('profile information can be updated', function () {
-    $user = User::factory()->create();
+    public function test_profile_information_can_be_updated()
+    {
+        $user = User::factory()->create(['email_verified_at' => now()]); // User is already verified
 
-    $response = $this
-        ->actingAs($user)
-        ->patch('/profile', [
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-        ]);
+        $response = $this
+            ->actingAs($user)
+            ->patch('/profile', [
+                'name' => 'Updated User Name',
+                'email' => 'updated.email@example.com', // Changed email
+            ]);
 
-    $response
-        ->assertSessionHasNoErrors()
-        ->assertRedirect('/profile');
+        $response
+            ->assertSessionHasNoErrors()
+            ->assertRedirect('/profile');
 
-    $user->refresh();
+        $user->refresh();
 
-    $this->assertSame('Test User', $user->name);
-    $this->assertSame('test@example.com', $user->email);
-    $this->assertNull($user->email_verified_at);
-});
+        $this->assertSame('Updated User Name', $user->name);
+        $this->assertSame('updated.email@example.com', $user->email);
+        // After changing email, email_verified_at should be null, requiring re-verification.
+        $this->assertNull($user->email_verified_at);
+    }
 
-test('email verification status is unchanged when the email address is unchanged', function () {
-    $user = User::factory()->create();
+    public function test_email_verification_status_is_unchanged_when_the_email_address_is_unchanged()
+    {
+        $user = User::factory()->create(['email_verified_at' => now()]); // User is already verified
 
-    $response = $this
-        ->actingAs($user)
-        ->patch('/profile', [
-            'name' => 'Test User',
-            'email' => $user->email,
-        ]);
+        $response = $this
+            ->actingAs($user)
+            ->patch('/profile', [
+                'name' => 'Test User',
+                'email' => $user->email, // Unchanged email
+            ]);
 
-    $response
-        ->assertSessionHasNoErrors()
-        ->assertRedirect('/profile');
+        $response
+            ->assertSessionHasNoErrors()
+            ->assertRedirect('/profile');
 
-    $this->assertNotNull($user->refresh()->email_verified_at);
-});
+        // Email verified at should remain the same
+        $this->assertNotNull($user->refresh()->email_verified_at);
+    }
 
-test('user can delete their account', function () {
-    $user = User::factory()->create();
+    public function test_profile_update_with_invalid_email_format()
+    {
+        $user = User::factory()->create();
 
-    $response = $this
-        ->actingAs($user)
-        ->delete('/profile', [
-            'password' => 'password',
-        ]);
+        $response = $this
+            ->actingAs($user)
+            ->patch('/profile', [
+                'name' => 'Test User',
+                'email' => 'invalid-email-format', // Invalid email
+            ]);
 
-    $response
-        ->assertSessionHasNoErrors()
-        ->assertRedirect('/');
+        $response
+            ->assertSessionHasErrors(['email']) // Expecting an error for the email field
+            ->assertRedirect('/profile'); // Should redirect back to profile page with errors
+    }
 
-    $this->assertGuest();
-    $this->assertNull($user->fresh());
-});
+    public function test_user_can_delete_their_account()
+    {
+        $user = User::factory()->create();
 
-test('correct password must be provided to delete account', function () {
-    $user = User::factory()->create();
+        $response = $this
+            ->actingAs($user)
+            ->delete('/profile', [
+                'password' => 'password',
+            ]);
 
-    $response = $this
-        ->actingAs($user)
-        ->from('/profile')
-        ->delete('/profile', [
-            'password' => 'wrong-password',
-        ]);
+        $response
+            ->assertSessionHasNoErrors()
+            ->assertRedirect('/');
 
-    $response
-        ->assertSessionHasErrors('password')
-        ->assertRedirect('/profile');
+        $this->assertGuest();
+        $this->assertNull($user->fresh());
+    }
 
-    $this->assertNotNull($user->fresh());
-});
+    public function test_correct_password_must_be_provided_to_delete_account()
+    {
+        $user = User::factory()->create();
+
+        $response = $this
+            ->actingAs($user)
+            ->from('/profile')
+            ->delete('/profile', [
+                'password' => 'wrong-password',
+            ]);
+
+        $response
+            ->assertSessionHasErrors('password')
+            ->assertRedirect('/profile');
+
+        $this->assertNotNull($user->fresh());
+    }
+
+    // Consider adding tests for:
+    // - Rate limiting on profile update and delete
+    // - Password confirmation mismatch for account deletion (if applicable)
+}
